@@ -3,6 +3,6 @@ import { register } from "../controllers/authControllers.js";
 
 const router = express.Router();
 
-router.route("/").post(register);
+router.route("/register").post(register);
 
 export default router;

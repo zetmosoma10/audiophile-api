@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import CustomError from "../utils/CustomError.js";
-import asyncErrorHandler from "../utils/asyncErrorHandler.js";
+import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
+import { CustomError } from "../utils/CustomError.js";
 import { Customer } from "../models/Customer.js";
 
 const auth = asyncErrorHandler(async (req, res, next) => {
