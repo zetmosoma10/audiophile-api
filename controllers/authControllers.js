@@ -10,8 +10,10 @@ export const register = async (req, res) => {
     phone,
   });
 
+  const token = customer.generateJwt();
+
   res.status(201).send({
     success: true,
-    customer,
+    token,
   });
 };
