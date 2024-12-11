@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { Customer } from "../models/Customer.js";
+import { Customer, validateLoginInput } from "../models/Customer.js";
 import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 import { CustomError } from "../utils/CustomError.js";
 
@@ -22,6 +22,11 @@ export const register = asyncErrorHandler(async (req, res, next) => {
 });
 
 export const login = asyncErrorHandler(async (req, res, next) => {
+  const err = validateLoginInput(req.body);
+  if (err) {
+    return next(new CustomError(err, 400));
+  }
+
   const { email, password } = req.body;
 
   const customer = await Customer.findOne({ email });
