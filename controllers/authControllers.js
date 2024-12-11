@@ -1,6 +1,7 @@
 import { Customer } from "../models/Customer.js";
+import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 
-export const register = async (req, res) => {
+export const register = asyncErrorHandler(async (req, res, next) => {
   const { name, email, password, phone } = req.body;
 
   const customer = await Customer.create({
@@ -16,4 +17,4 @@ export const register = async (req, res) => {
     success: true,
     token,
   });
-};
+});
