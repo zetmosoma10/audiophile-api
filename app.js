@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url";
 import authRouter from "./router/authRouter.js";
 import categoryRouter from "./router/categoryRouter.js";
 import customerRouter from "./router/customerRouter.js";
@@ -10,6 +11,8 @@ import catchAllRoutes from "./middlewares/catchAllRoutes.js";
 
 const app = express();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const publicPath = path.join(__dirname, "public");
 // http://localhost:3000/images/users/user1.jpg
 

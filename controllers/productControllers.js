@@ -27,3 +27,12 @@ export const createProduct = asyncErrorHandler(async (req, res) => {
     product,
   });
 });
+
+export const getAllProduct = asyncErrorHandler(async (req, res) => {
+  const products = await Product.find();
+
+  res.status(200).send({
+    success: true,
+    products,
+  });
+});
