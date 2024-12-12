@@ -17,3 +17,26 @@ export const createCategory = asyncErrorHandler(async (req, res, next) => {
     category,
   });
 });
+
+export const getAllCategories = asyncErrorHandler(async (req, res) => {
+  const categories = await Category.find();
+
+  res.status(200).send({
+    success: true,
+    categories,
+  });
+});
+
+export const deleteCategory = asyncErrorHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  const deletedCategory = await Category.findByIdAndDelete(id);
+
+  if (!deletedCategory) {
+    return next(new CustomError("Category already deleted.", 400));
+  }
+
+  res.status(200).send({
+    success: true,
+  });
+});

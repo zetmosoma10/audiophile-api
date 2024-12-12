@@ -10,7 +10,7 @@ const app = express();
 
 app.use(express.json());
 app.use("/api/auth", authRouter);
-app.use("/api/category", categoryRouter);
+app.use("/api/categories", categoryRouter);
 app.use("/api/customers", customerRouter);
 app.use("*", catchAllRoutes);
 app.use(globalErrorMiddleware);
