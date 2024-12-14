@@ -38,7 +38,7 @@ export const login = asyncErrorHandler(async (req, res, next) => {
   if (!isPasswordCorrect) {
     return next(new CustomError("Invalid email or password", 401));
   }
-  s;
+
   const token = customer.generateJwt();
 
   res.status(200).send({

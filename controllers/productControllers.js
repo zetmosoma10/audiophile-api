@@ -1,5 +1,6 @@
 import { Product } from "../models/Product.js";
 import { asyncErrorHandler } from "./../utils/asyncErrorHandler.js";
+import { CustomError } from "./../utils/CustomError.js";
 
 export const createProduct = asyncErrorHandler(async (req, res) => {
   const product = await Product.create({
@@ -28,11 +29,35 @@ export const createProduct = asyncErrorHandler(async (req, res) => {
   });
 });
 
-export const getAllProduct = asyncErrorHandler(async (req, res) => {
-  const products = await Product.find();
+export const getAllProduct = asyncErrorHandler(async (req, res, next) => {
+  const { categoryId } = req.params;
+
+  const products = await Product.find({ category: categoryId });
+
+  if (!products) {
+    return next(
+      new CustomError("Products with given category not found.", 404)
+    );
+  }
 
   res.status(200).send({
     success: true,
+    count: products.length,
     products,
+  });
+});
+
+export const getProduct = asyncErrorHandler(async (req, res, next) => {
+  const { productId } = req.params;
+
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    return next(new CustomError("Product not found.", 404));
+  }
+
+  res.status(200).send({
+    success: true,
+    product,
   });
 });
