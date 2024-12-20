@@ -20,9 +20,9 @@ const customerSchema = new mongoose.Schema(
       minLength: 4,
       maxLength: 150,
     },
-    phone: {
-      type: String,
-      required: true,
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
