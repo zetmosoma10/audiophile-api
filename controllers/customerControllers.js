@@ -3,7 +3,14 @@ import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 import _ from "lodash";
 
 export const getLoggedInCustomer = asyncErrorHandler(async (req, res, next) => {
-  const customer = _.omit(req.customer, ["password", "__v"]);
+  const customer = _.pick(req.customer, [
+    "_id",
+    "firstName",
+    "lastName",
+    "email",
+    "isAdmin",
+    "createdAt",
+  ]);
 
   res.status(200).send({
     success: true,
@@ -16,6 +23,7 @@ export const getAllCustomers = asyncErrorHandler(async (req, res) => {
 
   res.status(200).send({
     success: true,
+    count: customers.length,
     customers,
   });
 });

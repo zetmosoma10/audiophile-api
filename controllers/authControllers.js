@@ -1,16 +1,30 @@
 import bcrypt from "bcrypt";
-import { Customer, validateLoginInput } from "../models/Customer.js";
+import {
+  Customer,
+  validateLoginInput,
+  validateRegisterInput,
+} from "../models/Customer.js";
 import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 import { CustomError } from "../utils/CustomError.js";
 
 export const register = asyncErrorHandler(async (req, res, next) => {
-  const { name, email, password, phone } = req.body;
+  const { firstName, lastName, email, password, isAdmin } = req.body;
+  const err = validateRegisterInput(req.body);
+  if (err) {
+    return next(new CustomError(err, 400));
+  }
+
+  const isEmailExist = await Customer.findOne({ email });
+  if (isEmailExist) {
+    return next(new CustomError("Email already exists", 400));
+  }
 
   const customer = await Customer.create({
-    name,
+    firstName,
+    lastName,
     email,
     password,
-    phone,
+    isAdmin,
   });
 
   const token = customer.generateJwt();

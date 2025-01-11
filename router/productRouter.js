@@ -1,5 +1,6 @@
 import express from "express";
 import auth from "../middlewares/auth.js";
+import admin from "../middlewares/admin.js";
 import {
   createProduct,
   deleteProduct,
@@ -10,12 +11,12 @@ import {
 
 const router = express.Router();
 
-router.route("/").post(auth, createProduct);
-router.route("/:categoryId").get(auth, getAllProduct);
+router.route("/").post(auth, admin, createProduct);
+router.route("/:categoryId").get(getAllProduct);
 router
   .route("/product-detail/:productId")
-  .get(auth, getProduct)
-  .patch(auth, updateProduct)
-  .delete(auth, deleteProduct);
+  .get(getProduct)
+  .patch(auth, admin, updateProduct)
+  .delete(auth, admin, deleteProduct);
 
 export default router;

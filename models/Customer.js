@@ -5,9 +5,15 @@ import joi from "joi";
 
 const customerSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
       required: true,
+      minLength: 3,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      minLength: 3,
     },
     email: {
       type: String,
@@ -51,6 +57,23 @@ customerSchema.methods.generateJwt = function () {
   );
 };
 
+const validateRegisterInput = (data) => {
+  const schema = joi.object({
+    firstName: joi.string().min(3).max(50).required(),
+    lastName: joi.string().min(3).max(50).required(),
+    email: joi.string().email().required(),
+    password: joi.string().min(4).max(150).required(),
+    isAdmin: joi.boolean().optional(),
+  });
+
+  const { error } = schema.validate(data);
+  if (error) {
+    return error.details[0].message;
+  } else {
+    return null;
+  }
+};
+
 const validateLoginInput = (data) => {
   const schema = joi.object({
     email: joi.string().email().required(),
@@ -67,4 +90,4 @@ const validateLoginInput = (data) => {
 
 const Customer = mongoose.model("Customer", customerSchema);
 
-export { Customer, validateLoginInput };
+export { Customer, validateLoginInput, validateRegisterInput };
