@@ -6,6 +6,7 @@ import categoryRouter from "./router/categoryRouter.js";
 import customerRouter from "./router/customerRouter.js";
 import productRouter from "./router/productRouter.js";
 import orderRouter from "./router/orderRouter.js";
+import cartRouter from "./router/cartRouter.js";
 import globalErrorMiddleware from "./middlewares/globalErrorMiddleware.js";
 import catchAllRoutes from "./middlewares/catchAllRoutes.js";
 // process.env.NODE_ENV = "production";
@@ -24,6 +25,7 @@ app.use("/api/categories", categoryRouter);
 app.use("/api/customers", customerRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/carts", cartRouter);
 app.use("*", catchAllRoutes);
 app.use(globalErrorMiddleware);
 

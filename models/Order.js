@@ -52,6 +52,16 @@ orderSchema.pre("save", function (next) {
   next();
 });
 
+orderSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+
+  if (update.items || update.orderTotal) {
+    return next(new Error("Updating items or orderTotal is not allowed."));
+  }
+
+  next();
+});
+
 const Order = mongoose.model("Order", orderSchema);
 
 export { Order };
