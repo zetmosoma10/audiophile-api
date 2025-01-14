@@ -24,6 +24,10 @@ export const addItemToCart = asyncErrorHandler(async (req, res, next) => {
   const customerId = req.customer._id;
   const { productId, quantity } = req.body;
 
+  if (quantity < 1) {
+    return next(new CustomError("Quantity must be at least 1.", 400));
+  }
+
   const product = await Product.findById(productId);
   if (!product) {
     return next(new CustomError("Product not found.", 404));

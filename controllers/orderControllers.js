@@ -1,10 +1,28 @@
 import { Cart } from "../models/Cart.js";
-import { Order } from "../models/Order.js";
+import { Order, validateOrder } from "../models/Order.js";
 import { CustomError } from "../utils/CustomError.js";
 import { asyncErrorHandler } from "./../utils/asyncErrorHandler.js";
 
 export const createOrder = asyncErrorHandler(async (req, res, next) => {
   const customer = req.customer;
+
+  const err = validateOrder(req.body);
+  if (err) {
+    return next(new CustomError(err, 400));
+  }
+
+  const {
+    recipientName,
+    recipientPhoneNumber,
+    streetAddress,
+    city,
+    province,
+    postalCode,
+    country,
+    paymentMethod,
+    eMoneyNumber,
+    eMoneyPin,
+  } = req.body;
 
   const cart = await Cart.findOne({ customer: customer._id });
 
@@ -14,12 +32,24 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
 
   const order = await Order.create({
     customer: customer._id,
+    recipientName,
+    recipientPhoneNumber,
+    streetAddress,
+    city,
+    province,
+    postalCode,
+    country,
+    paymentMethod,
+    eMoneyNumber,
+    eMoneyPin,
     items: cart.products.map((item) => ({
       product: item.product,
       quantity: item.quantity,
       price: item.price,
       totalPrice: item.quantity * item.price,
     })),
+    total: cart.total,
+    grandTotal: cart.grandTotal,
   });
 
   await Cart.findOneAndDelete({ customer: customer._id });

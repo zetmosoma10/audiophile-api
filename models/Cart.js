@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const CartSchema = new mongoose.Schema(
+const cartSchema = new mongoose.Schema(
   {
     customer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -26,17 +26,35 @@ const CartSchema = new mongoose.Schema(
         },
       },
     ],
+    shipping: {
+      type: Number,
+      default: 89,
+    },
+    vat: {
+      type: Number,
+      default: 0.15,
+    },
+    total: {
+      type: Number,
+    },
+    grandTotal: {
+      type: Number,
+    },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-CartSchema.virtual("cartTotal").get(function () {
-  return this.products.reduce(
+cartSchema.pre("save", function (next) {
+  this.total = this.products.reduce(
     (sum, item) => sum + item.quantity * item.price,
     0
   );
+
+  this.grandTotal = this.total + this.shipping + this.total * this.vat;
+
+  next();
 });
 
-const Cart = mongoose.model("Cart", CartSchema);
+const Cart = mongoose.model("Cart", cartSchema);
 
 export { Cart };
