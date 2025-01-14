@@ -109,8 +109,13 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+// * Virtuals
+orderSchema.virtual("orderNumber").get(function () {
+  return this._id.toString().toUpperCase().slice(-4);
+});
 
 // * Middleware to calculate prices
 orderSchema.pre("save", function (next) {

@@ -2,6 +2,9 @@ import { Cart } from "../models/Cart.js";
 import { Order, validateOrder } from "../models/Order.js";
 import { CustomError } from "../utils/CustomError.js";
 import { asyncErrorHandler } from "./../utils/asyncErrorHandler.js";
+import { sendEmail } from "../emails/email.js";
+import { orderCreatedEmail } from "../emails/orderCreatedEmail.js";
+import { orderStatusUpdatedEmail } from "../emails/orderStatusUpdatedEmail.js";
 
 export const createOrder = asyncErrorHandler(async (req, res, next) => {
   const customer = req.customer;
@@ -54,6 +57,16 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
 
   await Cart.findOneAndDelete({ customer: customer._id });
 
+  try {
+    await sendEmail({
+      clientEmail: customer.email,
+      subject: "Order Confirmation",
+      htmlContent: orderCreatedEmail(customer, order.orderNumber),
+    });
+  } catch (error) {
+    console.log("Error sending email: ", error);
+  }
+
   res.status(201).send({
     success: true,
     order,
@@ -102,19 +115,35 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Invalid status", 400));
   }
 
-  const updatedOrder = await Order.findByIdAndUpdate(
-    orderId,
-    { status },
-    { new: true, runValidators: true }
+  const order = await Order.findById(orderId).populate(
+    "customer",
+    "email firstName"
   );
 
-  if (!updatedOrder) {
+  if (!order) {
     return next(new CustomError("Order not found", 404));
+  }
+
+  order.status = status;
+  await order.save();
+
+  try {
+    await sendEmail({
+      clientEmail: order.customer.email,
+      subject: "Order Status Update",
+      htmlContent: orderStatusUpdatedEmail(
+        order.customer,
+        order.orderNumber,
+        order.status
+      ),
+    });
+  } catch (error) {
+    console.log("Error sending email: ", error);
   }
 
   res.status(200).send({
     success: true,
-    order: updatedOrder,
+    order,
   });
 });
 
