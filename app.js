@@ -4,7 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import xss from "xss-clean";
 import compression from "compression";
-import rateLimit from "express-rate-limit";
+// import rateLimit from "express-rate-limit";
 import sanitize from "express-mongo-sanitize";
 import { fileURLToPath } from "url";
 import authRouter from "./router/authRouter.js";
@@ -24,17 +24,17 @@ const __dirname = path.dirname(__filename);
 const publicPath = path.join(__dirname, "public");
 // http://localhost:3000/images/users/user1.jpg
 
-rateLimit({
-  windowMs: 15 * 60 * 1000, // * 15 minutes
-  max: 100, // * limit each IP to 100 requests per windowMs // 100 requests
-  message: "Too many requests from this IP, please try again after an hour",
-});
+// rateLimit({
+//   windowMs: 15 * 60 * 1000, // * 15 minutes
+//   max: 100, // * limit each IP to 100 requests per windowMs // 100 requests
+//   message: "Too many requests from this IP, please try again after an hour",
+// });
 
 app.use(helmet());
 app.use(cors());
 app.use(sanitize());
 app.use(xss());
-app.use("/api/auth", rateLimit);
+// app.use("/api/auth", rateLimit);
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
