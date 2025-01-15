@@ -7,16 +7,18 @@ import {
   getAllProduct,
   getProduct,
   updateProduct,
+  getProductsByCategory,
 } from "../controllers/productControllers.js";
+import validateObjectId from "../middlewares/validateObjectId.js";
 
 const router = express.Router();
 
-router.route("/").post(auth, admin, createProduct);
-router.route("/:categoryId").get(getAllProduct);
+router.route("/").get(getAllProduct).post(auth, admin, createProduct);
+router.route("/:id").get(validateObjectId, getProductsByCategory);
 router
-  .route("/product-detail/:productId")
-  .get(getProduct)
-  .patch(auth, admin, updateProduct)
-  .delete(auth, admin, deleteProduct);
+  .route("/product-detail/:id")
+  .get(validateObjectId, getProduct)
+  .patch(auth, admin, validateObjectId, updateProduct)
+  .delete(auth, admin, validateObjectId, deleteProduct);
 
 export default router;

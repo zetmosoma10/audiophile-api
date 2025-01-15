@@ -90,8 +90,8 @@ export const getAllOrders = asyncErrorHandler(async (req, res) => {
 });
 
 export const getOrder = asyncErrorHandler(async (req, res, next) => {
-  const { orderId } = req.params;
-  const order = await Order.findById(orderId)
+  const { id } = req.params;
+  const order = await Order.findById(id)
     .populate("customer", "firstName lastName email")
     .populate("items.product", "name");
 
@@ -106,7 +106,7 @@ export const getOrder = asyncErrorHandler(async (req, res, next) => {
 });
 
 export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
-  const { orderId } = req.params;
+  const { id } = req.params;
   const { status } = req.body;
 
   const validStatuses = ["pending", "shipped", "delivered", "cancelled"];
@@ -115,7 +115,7 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Invalid status", 400));
   }
 
-  const order = await Order.findById(orderId).populate(
+  const order = await Order.findById(id).populate(
     "customer",
     "email firstName"
   );
@@ -148,8 +148,8 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
 });
 
 export const deleteOrder = asyncErrorHandler(async (req, res, next) => {
-  const { orderId } = req.params;
-  const order = await Order.findByIdAndDelete(orderId);
+  const { id } = req.params;
+  const order = await Order.findByIdAndDelete(id);
 
   if (!order) {
     return next(new CustomError("Order not found", 404));

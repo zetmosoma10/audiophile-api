@@ -30,15 +30,7 @@ export const createProduct = asyncErrorHandler(async (req, res) => {
 });
 
 export const getAllProduct = asyncErrorHandler(async (req, res, next) => {
-  const { categoryId } = req.params;
-
-  const products = await Product.find({ category: categoryId });
-
-  if (!products) {
-    return next(
-      new CustomError("Products with given category not found.", 404)
-    );
-  }
+  const products = await Product.find();
 
   res.status(200).send({
     success: true,
@@ -47,10 +39,30 @@ export const getAllProduct = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
-export const getProduct = asyncErrorHandler(async (req, res, next) => {
-  const { productId } = req.params;
+export const getProductsByCategory = asyncErrorHandler(
+  async (req, res, next) => {
+    const { id } = req.params;
 
-  const product = await Product.findById(productId);
+    const products = await Product.find({ category: id });
+
+    if (!products) {
+      return next(
+        new CustomError("Products with given category not found.", 404)
+      );
+    }
+
+    res.status(200).send({
+      success: true,
+      count: products.length,
+      products,
+    });
+  }
+);
+
+export const getProduct = asyncErrorHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  const product = await Product.findById(id);
 
   if (!product) {
     return next(new CustomError("Product not found.", 404));
@@ -63,9 +75,9 @@ export const getProduct = asyncErrorHandler(async (req, res, next) => {
 });
 
 export const deleteProduct = asyncErrorHandler(async (req, res, next) => {
-  const { productId } = req.params;
+  const { id } = req.params;
 
-  const deletedProduct = await Product.findByIdAndDelete(productId);
+  const deletedProduct = await Product.findByIdAndDelete(id);
   console.log(deletedProduct);
 
   if (!deletedProduct) {
@@ -78,10 +90,10 @@ export const deleteProduct = asyncErrorHandler(async (req, res, next) => {
 });
 
 export const updateProduct = asyncErrorHandler(async (req, res, next) => {
-  const { productId } = req.params;
+  const { id } = req.params;
 
-  const productInDb = await Product.findById(productId);
-  console.log(productInDb);
+  const productInDb = await Product.findById(id);
+
   if (!productInDb) {
     return next(new CustomError("Product not found", 404));
   }
