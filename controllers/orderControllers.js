@@ -75,8 +75,13 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
 
 export const getAllOrders = asyncErrorHandler(async (req, res) => {
   const customer = req.customer;
+  const { status } = req.query;
 
   const query = customer.isAdmin ? {} : { customer: customer._id };
+
+  if (status) {
+    query.status = status;
+  }
 
   const orders = await Order.find(query)
     .populate("customer", "firstName lastName email")
