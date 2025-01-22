@@ -30,10 +30,6 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    province: {
-      type: String,
-      required: true,
-    },
     postalCode: {
       type: String,
       required: true,
@@ -150,7 +146,6 @@ function validateOrder(data) {
       .required(),
     streetAddress: Joi.string().required(),
     city: Joi.string().required(),
-    province: Joi.string().required(),
     postalCode: Joi.string()
       .pattern(/^\d{4}$/)
       .required(),

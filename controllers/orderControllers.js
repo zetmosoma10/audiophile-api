@@ -1,5 +1,6 @@
 import { Cart } from "../models/Cart.js";
 import { Order, validateOrder } from "../models/Order.js";
+import { Product } from "../models/Product.js";
 import { CustomError } from "../utils/CustomError.js";
 import { asyncErrorHandler } from "./../utils/asyncErrorHandler.js";
 import { sendEmail } from "../emails/email.js";
@@ -19,7 +20,6 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     recipientPhoneNumber,
     streetAddress,
     city,
-    province,
     postalCode,
     country,
     paymentMethod,
@@ -33,13 +33,40 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Cart is empty", 400));
   }
 
+  const trackStock = [];
+
+  const updateStockPromises = cart.products.map(async (item) => {
+    const product = await Product.findById(item.product);
+
+    if (!product) {
+      throw new CustomError("Product not found", 404);
+    }
+
+    if (product.stock < item.quantity) {
+      throw new CustomError(`${product.name} is out of stock`, 400);
+    }
+
+    trackStock.push({
+      productId: product._id,
+      restoreQuantity: product.stock,
+    });
+
+    product.stock -= item.quantity;
+    await product.save();
+  });
+
+  try {
+    await Promise.all(updateStockPromises);
+  } catch (err) {
+    return next(err);
+  }
+
   const order = await Order.create({
     customer: customer._id,
     recipientName,
     recipientPhoneNumber,
     streetAddress,
     city,
-    province,
     postalCode,
     country,
     paymentMethod,
@@ -54,6 +81,22 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     total: cart.total,
     grandTotal: cart.grandTotal,
   });
+
+  if (!order) {
+    try {
+      const restoreStockPromises = trackStock.map(async (item) => {
+        const product = await Product.findById(item.productId);
+        product.stock = item.restoreQuantity;
+        await product.save();
+      });
+
+      await Promise.all(restoreStockPromises);
+    } catch (error) {
+      console.log("Error restoring stock: ", error);
+    }
+
+    return next(new CustomError("Failed to create order", 500));
+  }
 
   await Cart.findOneAndDelete({ customer: customer._id });
 

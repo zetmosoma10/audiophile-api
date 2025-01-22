@@ -1,65 +1,112 @@
 import mongoose from "mongoose";
 
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    trim: true,
-    required: true,
-  },
-  description: {
-    type: String,
-    trim: true,
-    required: true,
-  },
-  price: {
-    type: Number,
-    min: 0,
-    required: true,
-  },
-  features: {
-    type: String,
-    trim: true,
-    required: true,
-  },
-  mainImage: {
-    large: String,
-    medium: String,
-    small: String,
-  },
-  previewImage: {
-    large: String,
-    medium: String,
-    small: String,
-  },
-  isNewProduct: {
-    type: Boolean,
-    default: false,
-  },
-  images: {
-    type: [
-      {
-        large: String,
-        medium: String,
-        small: String,
+const productSchema = new mongoose.Schema(
+  {
+    slug: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    name: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    price: {
+      type: Number,
+      min: 0,
+      required: true,
+    },
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    discount: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    features: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    image: {
+      mobile: String,
+      tablet: String,
+      desktop: String,
+    },
+    new: {
+      type: Boolean,
+      default: false,
+    },
+    imageSmall: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    gallery: {
+      first: {
+        mobile: String,
+        tablet: String,
+        desktop: String,
       },
-    ],
-    required: true,
-  },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    required: true,
-  },
-  boxContents: {
-    type: [
-      {
-        item: { type: String, required: true },
-        quantity: { type: Number, required: true, min: 1 },
+      second: {
+        mobile: String,
+        tablet: String,
+        desktop: String,
       },
-    ],
-    required: true,
+      third: {
+        mobile: String,
+        tablet: String,
+        desktop: String,
+      },
+    },
+    others: {
+      type: [
+        {
+          slug: {
+            type: String,
+            trim: true,
+            required: true,
+          },
+          name: {
+            type: String,
+            trim: true,
+            required: true,
+          },
+          image: {
+            mobile: String,
+            tablet: String,
+            desktop: String,
+          },
+        },
+      ],
+      required: true,
+    },
+    includes: {
+      type: [
+        {
+          item: { type: String, required: true },
+          quantity: { type: Number, required: true, min: 1 },
+        },
+      ],
+      required: true,
+    },
   },
-});
+  { timestamps: true }
+);
 
 const Product = mongoose.model("Product", productSchema);
 

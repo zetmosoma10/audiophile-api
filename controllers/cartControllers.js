@@ -6,7 +6,7 @@ import { CustomError } from "../utils/CustomError.js";
 export const getCartItems = asyncErrorHandler(async (req, res, next) => {
   const cartItems = await Cart.findOne({ customer: req.customer._id }).populate(
     "products.product",
-    "name images.small"
+    "name imageSmall"
   );
 
   if (!cartItems) {

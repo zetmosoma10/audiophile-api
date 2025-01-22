@@ -22,7 +22,6 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicPath = path.join(__dirname, "public");
-// http://localhost:3000/images/users/user1.jpg
 
 // rateLimit({
 //   windowMs: 15 * 60 * 1000, // * 15 minutes
@@ -31,14 +30,20 @@ const publicPath = path.join(__dirname, "public");
 // });
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 app.use(sanitize());
 app.use(xss());
+app.use("/public", express.static(publicPath));
 // app.use("/api/auth", rateLimit);
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(publicPath));
 app.use("/api/auth", authRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/customers", customerRouter);

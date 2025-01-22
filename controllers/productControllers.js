@@ -4,23 +4,39 @@ import { CustomError } from "./../utils/CustomError.js";
 
 export const createProduct = asyncErrorHandler(async (req, res) => {
   const product = await Product.create({
+    slug: req.body.slug,
     name: req.body.name,
     description: req.body.description,
     price: req.body.price,
+    stock: req.body.stock,
+    discount: req.body.discount,
+    imageSmall: req.body.imageSmall,
     features: req.body.features,
     category: req.body.category,
-    mainImage: {
-      large: req.body.mainImage?.large,
-      medium: req.body.mainImage?.medium,
-      small: req.body.mainImage?.small,
+    image: {
+      mobile: req.body.image?.mobile,
+      tablet: req.body.image?.tablet,
+      desktop: req.body.image?.desktop,
     },
-    previewImage: {
-      large: req.body.previewImage?.large,
-      medium: req.body.previewImage?.medium,
-      small: req.body.previewImage?.small,
+    gallery: {
+      first: {
+        mobile: req.body.gallery.first?.mobile,
+        tablet: req.body.gallery.first?.tablet,
+        desktop: req.body.gallery.first?.desktop,
+      },
+      second: {
+        mobile: req.body.gallery.second?.mobile,
+        tablet: req.body.gallery.second?.tablet,
+        desktop: req.body.gallery.second?.desktop,
+      },
+      third: {
+        mobile: req.body.gallery.third?.mobile,
+        tablet: req.body.gallery.third?.tablet,
+        desktop: req.body.gallery.third?.desktop,
+      },
     },
-    images: req.body.images,
-    boxContents: req.body.boxContents,
+    others: req.body.others,
+    includes: req.body.includes,
   });
 
   res.status(201).send({
@@ -30,7 +46,7 @@ export const createProduct = asyncErrorHandler(async (req, res) => {
 });
 
 export const getAllProduct = asyncErrorHandler(async (req, res, next) => {
-  const products = await Product.find();
+  const products = await Product.find().populate("category", "name");
 
   res.status(200).send({
     success: true,
@@ -43,7 +59,10 @@ export const getProductsByCategory = asyncErrorHandler(
   async (req, res, next) => {
     const { id } = req.params;
 
-    const products = await Product.find({ category: id });
+    const products = await Product.find({ category: id }).populate(
+      "category",
+      "name"
+    );
 
     if (!products) {
       return next(
@@ -78,7 +97,6 @@ export const deleteProduct = asyncErrorHandler(async (req, res, next) => {
   const { id } = req.params;
 
   const deletedProduct = await Product.findByIdAndDelete(id);
-  console.log(deletedProduct);
 
   if (!deletedProduct) {
     return next(new CustomError("Product already deleted", 400));
@@ -86,6 +104,7 @@ export const deleteProduct = asyncErrorHandler(async (req, res, next) => {
 
   res.status(200).send({
     success: true,
+    message: "Product deleted successfully",
   });
 });
 
@@ -98,29 +117,60 @@ export const updateProduct = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Product not found", 404));
   }
 
-  const { mainImage = {}, previewImage = {} } = req.body;
-
   const updatedProduct = await Product.findByIdAndUpdate(
-    productId,
+    id,
     {
       $set: {
+        slug: req.body.slug || productInDb.slug,
         name: req.body.name || productInDb.name,
         description: req.body.description || productInDb.description,
         price: req.body.price || productInDb.price,
+        stock: req.body.stock || productInDb.stock,
+        discount: req.body.discount || productInDb.discount,
         features: req.body.features || productInDb.features,
         category: req.body.category || productInDb.category,
-        mainImage: {
-          large: mainImage.large || productInDb.mainImage.large,
-          medium: mainImage.medium || productInDb.mainImage.medium,
-          small: mainImage.small || productInDb.mainImage.small,
+        image: {
+          mobile: req.body.image?.mobile || productInDb.image.mobile,
+          tablet: req.body.image?.tablet || productInDb.image.tablet,
+          desktop: req.body.image?.desktop || productInDb.image.desktop,
         },
-        previewImage: {
-          large: previewImage.large || productInDb.previewImage.large,
-          medium: previewImage.medium || productInDb.previewImage.medium,
-          small: previewImage.small || productInDb.previewImage.small,
+        gallery: {
+          first: {
+            mobile:
+              req.body.gallery.first?.mobile ||
+              productInDb.gallery.first.mobile,
+            tablet:
+              req.body.gallery.first?.tablet ||
+              productInDb.gallery.first.tablet,
+            desktop:
+              req.body.gallery.first?.desktop ||
+              productInDb.gallery.first.desktop,
+          },
+          second: {
+            mobile:
+              req.body.gallery.second?.mobile ||
+              productInDb.gallery.second.mobile,
+            tablet:
+              req.body.gallery.second?.tablet ||
+              productInDb.gallery.second.tablet,
+            desktop:
+              req.body.gallery.second?.desktop ||
+              productInDb.gallery.second.desktop,
+          },
+          third: {
+            mobile:
+              req.body.gallery.third?.mobile ||
+              productInDb.gallery.third.mobile,
+            tablet:
+              req.body.gallery.third?.tablet ||
+              productInDb.gallery.third.tablet,
+            desktop:
+              req.body.gallery.third?.desktop ||
+              productInDb.gallery.third.desktop,
+          },
         },
-        images: req.body.images || productInDb.images,
-        boxContents: req.body.boxContents || productInDb.boxContents,
+        others: req.body.others || productInDb.others,
+        includes: req.body.includes || productInDb.includes,
       },
     },
     { new: true, runValidators: true }

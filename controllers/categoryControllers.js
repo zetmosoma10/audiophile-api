@@ -10,6 +10,7 @@ export const createCategory = asyncErrorHandler(async (req, res, next) => {
 
   const category = await Category.create({
     name: req.body.name,
+    categoryImage: req.body.categoryImage,
   });
 
   res.status(201).send({
