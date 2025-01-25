@@ -35,7 +35,15 @@ export const createProduct = asyncErrorHandler(async (req, res) => {
         desktop: req.body.gallery.third?.desktop,
       },
     },
-    others: req.body.others,
+    others: {
+      slug: req.body.others.slug,
+      name: req.body.others.name,
+      image: {
+        mobile: req.body.others.image?.mobile,
+        tablet: req.body.others.image?.tablet,
+        desktop: req.body.others.image?.desktop,
+      },
+    },
     includes: req.body.includes,
   });
 
@@ -46,7 +54,7 @@ export const createProduct = asyncErrorHandler(async (req, res) => {
 });
 
 export const getAllProduct = asyncErrorHandler(async (req, res, next) => {
-  const products = await Product.find().populate("category", "name");
+  const products = await Product.find().select("others");
 
   res.status(200).send({
     success: true,

@@ -74,26 +74,13 @@ const productSchema = new mongoose.Schema(
       },
     },
     others: {
-      type: [
-        {
-          slug: {
-            type: String,
-            trim: true,
-            required: true,
-          },
-          name: {
-            type: String,
-            trim: true,
-            required: true,
-          },
-          image: {
-            mobile: String,
-            tablet: String,
-            desktop: String,
-          },
-        },
-      ],
-      required: true,
+      slug: String,
+      name: String,
+      image: {
+        mobile: String,
+        tablet: String,
+        desktop: String,
+      },
     },
     includes: {
       type: [

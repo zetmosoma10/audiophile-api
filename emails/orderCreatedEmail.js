@@ -1,4 +1,4 @@
-export function orderCreatedEmail(customer, orderId) {
+export function orderCreatedEmail(order) {
   return `<!DOCTYPE html>
         <html>
             <head>
@@ -11,8 +11,10 @@ export function orderCreatedEmail(customer, orderId) {
                         <h1 style="margin: 0; font-size: 24px;">Order Confirmation</h1>
                     </header>
                     <main style="padding: 20px; color: #333; line-height: 1.5;">
-                        <p>Hi ${customer.firstName},</p>
-                        <p>Thank you for your order! Your order number is <strong>#${orderId}</strong>.</p>
+                        <p>Hi ${order.name},</p>
+                        <p>Thank you for your order! Your order number is <strong>#${
+                          order.orderNumber
+                        }</strong>.</p>
                         <p>We will notify you once your order is processed and shipped.</p>
                         <p>Thank you for shopping with us!<br>The Audio Store Team</p>
                     </main>

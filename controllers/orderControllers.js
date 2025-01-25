@@ -16,8 +16,9 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
   }
 
   const {
-    recipientName,
-    recipientPhoneNumber,
+    name,
+    email,
+    phone,
     streetAddress,
     city,
     postalCode,
@@ -63,8 +64,9 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
 
   const order = await Order.create({
     customer: customer._id,
-    recipientName,
-    recipientPhoneNumber,
+    name,
+    email,
+    phone,
     streetAddress,
     city,
     postalCode,
@@ -82,6 +84,7 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     grandTotal: cart.grandTotal,
   });
 
+  // * Restore stock if order creation fails
   if (!order) {
     try {
       const restoreStockPromises = trackStock.map(async (item) => {
@@ -100,11 +103,12 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
 
   await Cart.findOneAndDelete({ customer: customer._id });
 
+  // * Send email to customer
   try {
     await sendEmail({
-      clientEmail: customer.email,
+      clientEmail: order.email,
       subject: "Order Confirmation",
-      htmlContent: orderCreatedEmail(customer, order.orderNumber),
+      htmlContent: orderCreatedEmail(order),
     });
   } catch (error) {
     console.log("Error sending email: ", error);
@@ -163,10 +167,7 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Invalid status", 400));
   }
 
-  const order = await Order.findById(id).populate(
-    "customer",
-    "email firstName"
-  );
+  const order = await Order.findById(id);
 
   if (!order) {
     return next(new CustomError("Order not found", 404));
@@ -177,13 +178,9 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
 
   try {
     await sendEmail({
-      clientEmail: order.customer.email,
+      clientEmail: order.email,
       subject: "Order Status Update",
-      htmlContent: orderStatusUpdatedEmail(
-        order.customer,
-        order.orderNumber,
-        order.status
-      ),
+      htmlContent: orderStatusUpdatedEmail(order),
     });
   } catch (error) {
     console.log("Error sending email: ", error);

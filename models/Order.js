@@ -8,13 +8,19 @@ const orderSchema = new mongoose.Schema(
       ref: "Customer",
       required: true,
     },
-    recipientName: {
+    name: {
       type: String,
       minLength: [3, "Recipient name must be at least 3 characters long."],
       maxLength: [50, "Recipient name must not exceed 50 characters."],
       required: true,
     },
-    recipientPhoneNumber: {
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: true,
+    },
+    phone: {
       type: String,
       match: [
         /^\d{10}$/,
@@ -140,8 +146,9 @@ orderSchema.pre("findOneAndUpdate", function (next) {
 // * Joi validation
 function validateOrder(data) {
   const schema = Joi.object({
-    recipientName: Joi.string().min(3).max(50).required(),
-    recipientPhoneNumber: Joi.string()
+    name: Joi.string().min(3).max(50).required(),
+    email: Joi.string().email().required(),
+    phone: Joi.string()
       .pattern(/^\d{10}$/)
       .required(),
     streetAddress: Joi.string().required(),

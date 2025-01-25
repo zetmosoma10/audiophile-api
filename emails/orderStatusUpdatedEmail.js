@@ -1,4 +1,4 @@
-export function orderStatusUpdatedEmail(customer, orderId, orderStatus) {
+export function orderStatusUpdatedEmail(order) {
   return `<!DOCTYPE html>
         <html>
             <head>
@@ -11,8 +11,10 @@ export function orderStatusUpdatedEmail(customer, orderId, orderStatus) {
                         <h1 style="margin: 0; font-size: 24px;">Order Status Update</h1>
                     </header>
                     <main style="padding: 20px; color: #333; line-height: 1.5;">
-                        <p>Hi ${customer.firstName},</p>
-                        <p>Your order <strong>#${orderId}</strong> is <strong>${orderStatus}</strong>.</p>
+                        <p>Hi ${order.name},</p>
+                        <p>Your order <strong>#${
+                          order.orderNumber
+                        }</strong> is <strong>${order.status}</strong>.</p>
                         <p>Please contact us if you have any questions regarding your order.</p>
                         <p>Thank you for choosing Audio Store!<br>The Tech Gurus Team</p>
                     </main>
