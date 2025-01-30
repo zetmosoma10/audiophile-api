@@ -72,7 +72,8 @@ export const getProductsByCategory = asyncErrorHandler(
       "name"
     );
 
-    if (!products) {
+
+    if (products.length === 0) {
       return next(
         new CustomError("Products with given category not found.", 404)
       );

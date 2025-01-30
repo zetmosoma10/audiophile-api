@@ -43,6 +43,11 @@ const productSchema = new mongoose.Schema(
       tablet: String,
       desktop: String,
     },
+    imageCategory: {
+      mobile: String,
+      tablet: String,
+      desktop: String,
+    },
     new: {
       type: Boolean,
       default: false,
