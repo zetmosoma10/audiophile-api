@@ -56,7 +56,8 @@ customerSchema.methods.generateJwt = function () {
   return jwt.sign(
     {
       _id: this._id,
-      name: this.name,
+      firstName: this.firstName,
+      lastName: this.lastName,
     },
     process.env.JWT_SECRET_STR,
     { expiresIn: process.env.JWT_EXPIRES }
