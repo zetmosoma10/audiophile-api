@@ -24,6 +24,14 @@ const cartSchema = new mongoose.Schema(
           required: true,
           min: [0, "Price cannot be negative."],
         },
+        name: {
+          type: String,
+          required: true,
+        },
+        image: {
+          type: String,
+          required: true,
+        },
       },
     ],
     shipping: {

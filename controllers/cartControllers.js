@@ -4,19 +4,16 @@ import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 import { CustomError } from "../utils/CustomError.js";
 
 export const getCartItems = asyncErrorHandler(async (req, res, next) => {
-  const cartItems = await Cart.findOne({ customer: req.customer._id }).populate(
-    "products.product",
-    "name imageSmall"
-  );
+  const cart = await Cart.findOne({ customer: req.customer._id })
 
-  if (!cartItems) {
+  if (!cart) {
     return next(new CustomError("Cart no found.", 404));
   }
 
   res.status(200).send({
     success: true,
-    count: cartItems.products.length,
-    cartItems,
+    count: cart.products.length,
+    cart,
   });
 });
 
@@ -41,9 +38,11 @@ export const addItemToCart = asyncErrorHandler(async (req, res, next) => {
       customer: customerId,
       products: [
         {
-          product: productId,
           quantity,
+          product: productId,
           price: product.price,
+          name: product.others.name,
+          image: product.imageSmall,
         },
       ],
     });
@@ -59,9 +58,11 @@ export const addItemToCart = asyncErrorHandler(async (req, res, next) => {
     } else {
       // * If the product doesn't exist, add it to the cart
       cart.products.push({
-        product: productId,
         quantity,
+        product: productId,
         price: product.price,
+        name: product.others.name,
+        image: product.imageSmall,
       });
     }
   }
@@ -70,6 +71,7 @@ export const addItemToCart = asyncErrorHandler(async (req, res, next) => {
 
   res.status(201).send({
     success: true,
+    count:cart.products.length,
     cart,
   });
 });
@@ -83,9 +85,9 @@ export const updateCartItem = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Cart not found.", 404));
   }
 
-  const productIndex = cart.products.findIndex(
-    (item) => item.product.toString() === productId
-  );
+  const productIndex = cart.products.findIndex((item) => {
+    return item.product.toString() === productId;
+  });
 
   if (productIndex === -1) {
     return next(new CustomError("Product not found.", 404));
@@ -103,7 +105,7 @@ export const updateCartItem = asyncErrorHandler(async (req, res, next) => {
 
   res.status(200).send({
     success: true,
-    count: cart.products.length,
+    count:cart.products.length,
     cart,
   });
 });
@@ -132,6 +134,7 @@ export const removeItemFromCart = asyncErrorHandler(async (req, res, next) => {
 
   res.status(200).send({
     success: true,
-    message: "Product removed from cart.",
-  });
+    count:cart.products.length,
+    cart,
+  })
 });
