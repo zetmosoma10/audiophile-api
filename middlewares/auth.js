@@ -7,7 +7,7 @@ const auth = asyncErrorHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
 
-  // * check if token exist
+  // * check if token exists
   if (!token) {
     return next(
       new CustomError("Authentication token missing. Please login", 401)

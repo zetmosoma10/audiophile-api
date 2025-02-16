@@ -4,7 +4,7 @@ import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 import { CustomError } from "../utils/CustomError.js";
 
 export const getCartItems = asyncErrorHandler(async (req, res, next) => {
-  const cart = await Cart.findOne({ customer: req.customer._id })
+  const cart = await Cart.findOne({ customer: req.customer._id });
 
   if (!cart) {
     return next(new CustomError("Cart no found.", 404));
@@ -71,7 +71,7 @@ export const addItemToCart = asyncErrorHandler(async (req, res, next) => {
 
   res.status(201).send({
     success: true,
-    count:cart.products.length,
+    count: cart.products.length,
     cart,
   });
 });
@@ -93,7 +93,7 @@ export const updateCartItem = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Product not found.", 404));
   }
 
-  if (quantity === 0) {
+  if (quantity < 1) {
     cart.products = cart.products.filter(
       (item) => item.product.toString() !== productId
     );
@@ -105,36 +105,21 @@ export const updateCartItem = asyncErrorHandler(async (req, res, next) => {
 
   res.status(200).send({
     success: true,
-    count:cart.products.length,
+    count: cart.products.length,
     cart,
   });
 });
 
-export const removeItemFromCart = asyncErrorHandler(async (req, res, next) => {
-  const { productId } = req.body;
+export const removeAllItemsInCart = asyncErrorHandler(
+  async (req, res, next) => {
+    const customerId = req.customer._id;
 
-  const cart = await Cart.findOne({ customer: req.customer._id });
-  if (!cart) {
-    return next(new CustomError("Cart not found.", 404));
+    const cart = await Cart.findOneAndDelete({ customer: customerId });
+
+    if (!cart) {
+      return next(new CustomError("Cart not Found.", 404));
+    }
+
+    res.status(204).send(null);
   }
-
-  const productIndex = cart.products.findIndex(
-    (item) => item.product.toString() === productId
-  );
-
-  if (productIndex === -1) {
-    return next(new CustomError("Product not found.", 404));
-  }
-
-  cart.products = cart.products.filter(
-    (item) => item.product.toString() !== productId
-  );
-
-  await cart.save();
-
-  res.status(200).send({
-    success: true,
-    count:cart.products.length,
-    cart,
-  })
-});
+);

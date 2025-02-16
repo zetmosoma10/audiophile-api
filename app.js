@@ -13,9 +13,10 @@ import customerRouter from "./router/customerRouter.js";
 import productRouter from "./router/productRouter.js";
 import orderRouter from "./router/orderRouter.js";
 import cartRouter from "./router/cartRouter.js";
+import serverStatusRouter from "./router/serverStatusRouter.js";
 import globalErrorMiddleware from "./middlewares/globalErrorMiddleware.js";
 import catchAllRoutes from "./middlewares/catchAllRoutes.js";
-// process.env.NODE_ENV = "production";
+process.env.NODE_ENV = "production";
 
 const app = express();
 
@@ -28,7 +29,6 @@ const publicPath = path.join(__dirname, "public");
 //   max: 100, // * limit each IP to 100 requests per windowMs // 100 requests
 //   message: "Too many requests from this IP, please try again after an hour",
 // });
-
 
 app.use(cors());
 app.use(helmet());
@@ -43,6 +43,7 @@ app.use(express.static(publicPath));
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/health", serverStatusRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/customers", customerRouter);

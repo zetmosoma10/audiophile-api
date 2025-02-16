@@ -51,12 +51,12 @@ export const login = asyncErrorHandler(async (req, res, next) => {
 
   const customer = await Customer.findOne({ email });
   if (!customer) {
-    return next(new CustomError("Invalid email or password", 401));
+    return next(new CustomError("Invalid email or password", 400));
   }
 
   const isPasswordCorrect = await bcrypt.compare(password, customer.password);
   if (!isPasswordCorrect) {
-    return next(new CustomError("Invalid email or password", 401));
+    return next(new CustomError("Invalid email or password", 400));
   }
 
   const token = customer.generateJwt();

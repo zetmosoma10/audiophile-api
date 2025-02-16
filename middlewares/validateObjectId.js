@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { CustomError } from "../utils/customError.js";
+import { CustomError } from "../utils/CustomError.js";
 
 export default function validateObjectId(req, res, next) {
   const { id } = req.params;

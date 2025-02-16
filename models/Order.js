@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Joi from "joi";
+import dayjs from "dayjs";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -28,7 +29,7 @@ const orderSchema = new mongoose.Schema(
       ],
       required: true,
     },
-    streetAddress: {
+    address: {
       type: String,
       required: true,
     },
@@ -55,6 +56,7 @@ const orderSchema = new mongoose.Schema(
     },
     eMoneyNumber: {
       type: String,
+      select: false,
       required: function () {
         return this.paymentMethod === "e-money";
       },
@@ -63,6 +65,7 @@ const orderSchema = new mongoose.Schema(
     },
     eMoneyPin: {
       type: String,
+      select: false,
       required: function () {
         return this.paymentMethod === "e-money";
       },
@@ -110,6 +113,9 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
+    deliveryDate: {
+      type: Date,
+    },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -129,6 +135,9 @@ orderSchema.pre("save", function (next) {
   // * Calculate `orderTotal` for the entire order
   this.total = this.items.reduce((total, item) => total + item.totalPrice, 0);
 
+  // * Delivery Date
+  this.deliveryDate = dayjs().add(5, "days");
+
   next();
 });
 
@@ -146,28 +155,74 @@ orderSchema.pre("findOneAndUpdate", function (next) {
 // * Joi validation
 function validateOrder(data) {
   const schema = Joi.object({
-    name: Joi.string().min(3).max(50).required(),
-    email: Joi.string().email().required(),
+    name: Joi.string().min(3).max(50).required().messages({
+      "string.min": "Name must be at least 3 characters long.",
+      "string.max": "Name cannot be longer than 50 characters.",
+      "any.required": "Name is required.",
+    }),
+
+    email: Joi.string().email().required().messages({
+      "string.email": "Please enter a valid email address.",
+      "any.required": "Email is required.",
+    }),
+
     phone: Joi.string()
       .pattern(/^\d{10}$/)
-      .required(),
-    streetAddress: Joi.string().required(),
-    city: Joi.string().required(),
+      .required()
+      .messages({
+        "string.pattern.base": "Phone number must be exactly 10 digits.",
+        "any.required": "Phone number is required.",
+      }),
+
+    address: Joi.string().required().messages({
+      "any.required": "Address is required.",
+    }),
+
+    city: Joi.string().required().messages({
+      "any.required": "City is required.",
+    }),
+
     postalCode: Joi.string()
       .pattern(/^\d{4}$/)
-      .required(),
-    country: Joi.string().required(),
-    paymentMethod: Joi.string().valid("e-money", "cash").required(),
-    eMoneyNumber: Joi.string().when("paymentMethod", {
-      is: "e-money",
-      then: Joi.string().min(10).max(20).required(),
+      .required()
+      .messages({
+        "string.pattern.base": "Postal code must be exactly 4 digits.",
+        "any.required": "Postal code is required.",
+      }),
+
+    country: Joi.string().required().messages({
+      "any.required": "Country is required.",
     }),
-    eMoneyPin: Joi.string().when("paymentMethod", {
-      is: "e-money",
-      then: Joi.string()
-        .pattern(/^\d{4}$/)
-        .required(),
+
+    paymentMethod: Joi.string().valid("e-money", "cash").required().messages({
+      "any.only": 'Payment method must be either "e-money" or "cash".',
+      "any.required": "Payment method is required.",
     }),
+
+    eMoneyNumber: Joi.string()
+      .when("paymentMethod", {
+        is: "e-money",
+        then: Joi.string().min(10).max(20).required(),
+      })
+      .messages({
+        "string.min": "eMoney Number must be at least 10 characters long.",
+        "string.max": "eMoney Number cannot be longer than 20 characters.",
+        "any.required":
+          "eMoney Number is required when using e-money payment method.",
+      }),
+
+    eMoneyPin: Joi.string()
+      .when("paymentMethod", {
+        is: "e-money",
+        then: Joi.string()
+          .pattern(/^\d{4}$/)
+          .required(),
+      })
+      .messages({
+        "string.pattern.base": "eMoney PIN must be exactly 4 digits.",
+        "any.required":
+          "eMoney PIN is required when using e-money payment method.",
+      }),
   });
 
   const { error } = schema.validate(data);

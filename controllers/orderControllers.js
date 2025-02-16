@@ -19,7 +19,7 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     name,
     email,
     phone,
-    streetAddress,
+    address,
     city,
     postalCode,
     country,
@@ -67,7 +67,7 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     name,
     email,
     phone,
-    streetAddress,
+    address,
     city,
     postalCode,
     country,
@@ -131,8 +131,8 @@ export const getAllOrders = asyncErrorHandler(async (req, res) => {
   }
 
   const orders = await Order.find(query)
-    .populate("customer", "firstName lastName email")
-    .populate("items.product", "name");
+    .sort("-createdAt")
+    .populate("items.product", "name imageSmall");
 
   res.status(200).send({
     success: true,
