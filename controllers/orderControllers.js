@@ -124,7 +124,7 @@ export const getAllOrders = asyncErrorHandler(async (req, res) => {
   const customer = req.customer;
   const { status } = req.query;
 
-  const query = customer.isAdmin ? {} : { customer: customer._id };
+  const query = { customer: customer._id };
 
   if (status) {
     query.status = status;
@@ -154,6 +154,26 @@ export const getOrder = asyncErrorHandler(async (req, res, next) => {
   res.status(200).send({
     success: true,
     order,
+  });
+});
+
+// ? ADMIN
+export const adminGetAllOrders = asyncErrorHandler(async (req, res, next) => {
+  const { status } = req.query;
+
+  const query = {};
+
+  if (status) {
+    query.status = status;
+  }
+
+  const orders = await Order.find(query)
+    .select("name orderNumber grandTotal status createdAt")
+    .sort("-createdAt");
+
+  res.status(200).send({
+    success: true,
+    orders,
   });
 });
 

@@ -80,7 +80,7 @@ export const forgotPassword = asyncErrorHandler(async (req, res, next) => {
   const token = customer.createResetPasswordToken();
   await customer.save({ validateBeforeSave: false });
 
-  const resetUrl = `${process.env.FRONTEND_URL}/resetPassword?token=${token}&id=${customer._id}`;
+  const resetUrl = `${process.env.FRONTEND_CLIENT_URL}/resetPassword?token=${token}&id=${customer._id}`;
 
   // * 3 -> send email token
   try {
@@ -118,11 +118,11 @@ export const resetPassword = asyncErrorHandler(async (req, res, next) => {
   // * 2 -> check if token is not expired
   const currentTime = dayjs();
   const hasFifteenMinutesPassed = currentTime.isAfter(
-    customer.resetPasswordTokenExpire
+    customer.resetPasswordExpire
   );
 
   if (hasFifteenMinutesPassed) {
-    customer.resetPasswordTokenExpire = undefined;
+    customer.resetPasswordExpire = undefined;
     customer.resetPasswordToken = undefined;
     await customer.save();
 
@@ -139,7 +139,7 @@ export const resetPassword = asyncErrorHandler(async (req, res, next) => {
 
   // * 4 ->  save password to db, reset db token & db token expireTime
   customer.password = password;
-  customer.resetPasswordTokenExpire = undefined;
+  customer.resetPasswordExpire = undefined;
   customer.resetPasswordToken = undefined;
   await customer.save();
 
@@ -161,4 +161,102 @@ export const resetPassword = asyncErrorHandler(async (req, res, next) => {
     success: true,
     token: jwt,
   });
+});
+
+// ? ADMIN
+
+export const adminRegister = asyncErrorHandler(async (req, res, next) => {
+  const { firstName, lastName, email, password, isAdmin } = req.body;
+  const err = validateRegisterInput(req.body);
+  if (err) {
+    return next(new CustomError(err, 400));
+  }
+
+  const isEmailExist = await Customer.findOne({ email });
+  if (isEmailExist) {
+    return next(new CustomError("Email already exists", 400));
+  }
+
+  const customer = await Customer.create({
+    firstName,
+    lastName,
+    email,
+    password,
+    isAdmin: true,
+  });
+
+  const token = customer.generateJwt();
+
+  res.status(201).send({
+    success: true,
+    token,
+  });
+});
+
+export const adminLogin = asyncErrorHandler(async (req, res, next) => {
+  const err = validateLoginInput(req.body);
+  if (err) {
+    return next(new CustomError(err, 400));
+  }
+
+  const { email, password } = req.body;
+
+  const customer = await Customer.findOne({ email });
+  if (!customer) {
+    return next(new CustomError("Invalid email or password", 400));
+  }
+
+  const isPasswordCorrect = await bcrypt.compare(password, customer.password);
+  if (!isPasswordCorrect) {
+    return next(new CustomError("Invalid email or password", 400));
+  }
+
+  if (!customer.isAdmin) {
+    return next(new CustomError("Access denied. Admin only", 403));
+  }
+
+  const token = customer.generateJwt();
+
+  res.status(200).send({
+    success: true,
+    token,
+  });
+});
+
+export const adminForgotPassword = asyncErrorHandler(async (req, res, next) => {
+  // * 1 -> get email and validate it in db
+  const { email } = req.body;
+  const customer = await Customer.findOne({ email });
+
+  if (!customer) {
+    return next(new CustomError("Provided email does not exist", 400));
+  }
+
+  if (!customer.isAdmin) {
+    return next(new CustomError("Access denied. Email is not Admin", 403));
+  }
+
+  // * 2 -> generate token and save it in db
+  const token = customer.createResetPasswordToken();
+  await customer.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.FRONTEND_ADMIN_URL}/resetPassword?token=${token}&id=${customer._id}`;
+
+  // * 3 -> send email token
+  try {
+    await sendEmail({
+      clientEmail: email,
+      subject: "We’ve Received Your Password Reset Request",
+      htmlContent: resetPasswordEmail(customer, resetUrl),
+    });
+
+    res.status(200).send({
+      success: true,
+      message: "We have sent password reset link to your email",
+    });
+  } catch (error) {
+    next(
+      new CustomError("Error happened while sending reset password email", 500)
+    );
+  }
 });

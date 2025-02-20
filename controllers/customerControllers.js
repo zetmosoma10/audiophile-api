@@ -20,12 +20,30 @@ export const getLoggedInCustomer = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
+export const deleteProfileAccount = asyncErrorHandler(
+  async (req, res, next) => {
+    const id = req.customer._id;
+    const customer = await Customer.findByIdAndDelete(id);
+
+    if (!customer) {
+      return next(new CustomError("Customer not found", 404));
+    }
+
+    await Order.deleteMany(id);
+
+    res.status(200).send({
+      success: true,
+      customer,
+    });
+  }
+);
+
+//  ? ADMIN
 export const getAllCustomers = asyncErrorHandler(async (req, res) => {
   const customers = await Customer.find().select("-password -__v");
 
   res.status(200).send({
     success: true,
-    count: customers.length,
     customers,
   });
 });
@@ -46,21 +64,3 @@ export const deleteCustomer = asyncErrorHandler(async (req, res, next) => {
     customer,
   });
 });
-
-export const deleteProfileAccount = asyncErrorHandler(
-  async (req, res, next) => {
-    const id = req.customer._id;
-    const customer = await Customer.findByIdAndDelete(id);
-
-    if (!customer) {
-      return next(new CustomError("Customer not found", 404));
-    }
-
-    await Order.deleteMany(id);
-
-    res.status(200).send({
-      success: true,
-      customer,
-    });
-  }
-);

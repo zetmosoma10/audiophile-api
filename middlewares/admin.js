@@ -3,7 +3,7 @@ import { CustomError } from "../utils/CustomError.js";
 
 const admin = asyncErrorHandler(async (req, res, next) => {
   if (!req.customer.isAdmin) {
-    return next(new CustomError("Access denied", 403));
+    return next(new CustomError("Access denied. Admin only", 403));
   }
 
   next();

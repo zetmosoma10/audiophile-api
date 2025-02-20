@@ -58,7 +58,6 @@ export const getAllProduct = asyncErrorHandler(async (req, res, next) => {
 
   res.status(200).send({
     success: true,
-    count: products.length,
     products,
   });
 });
@@ -71,7 +70,6 @@ export const getProductsByCategory = asyncErrorHandler(
       "category",
       "name"
     );
-
 
     if (products.length === 0) {
       return next(
@@ -102,18 +100,15 @@ export const getProduct = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
-export const deleteProduct = asyncErrorHandler(async (req, res, next) => {
-  const { id } = req.params;
-
-  const deletedProduct = await Product.findByIdAndDelete(id);
-
-  if (!deletedProduct) {
-    return next(new CustomError("Product already deleted", 400));
-  }
+// ? ADMIN
+export const adminGetAllProduct = asyncErrorHandler(async (req, res, next) => {
+  const products = await Product.find()
+    .select("name price stock category")
+    .populate("category", "name");
 
   res.status(200).send({
     success: true,
-    message: "Product deleted successfully",
+    products,
   });
 });
 
@@ -188,5 +183,20 @@ export const updateProduct = asyncErrorHandler(async (req, res, next) => {
   res.status(200).send({
     success: true,
     product: updatedProduct,
+  });
+});
+
+export const deleteProduct = asyncErrorHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  const deletedProduct = await Product.findByIdAndDelete(id);
+
+  if (!deletedProduct) {
+    return next(new CustomError("Product already deleted", 400));
+  }
+
+  res.status(200).send({
+    success: true,
+    message: "Product deleted successfully",
   });
 });

@@ -2,6 +2,17 @@ import { Category, validateCategory } from "../models/Category.js";
 import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 import { CustomError } from "../utils/CustomError.js";
 
+export const getAllCategories = asyncErrorHandler(async (req, res) => {
+  const categories = await Category.find();
+
+  res.status(200).send({
+    success: true,
+    categories,
+  });
+});
+
+// ? ADMIN
+
 export const createCategory = asyncErrorHandler(async (req, res, next) => {
   const err = validateCategory(req.body);
   if (err) {
@@ -16,15 +27,6 @@ export const createCategory = asyncErrorHandler(async (req, res, next) => {
   res.status(201).send({
     success: true,
     category,
-  });
-});
-
-export const getAllCategories = asyncErrorHandler(async (req, res) => {
-  const categories = await Category.find();
-
-  res.status(200).send({
-    success: true,
-    categories,
   });
 });
 
