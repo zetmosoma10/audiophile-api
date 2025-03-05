@@ -22,6 +22,10 @@ const productSchema = new mongoose.Schema(
       min: 0,
       required: true,
     },
+    finalPrice: {
+      type: Number,
+      min: 0,
+    },
     stock: {
       type: Number,
       required: true,
@@ -99,6 +103,14 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+productSchema.pre("save", function () {
+  if (this.discount > 0) {
+    this.finalPrice = this.price - (this.price * this.discount) / 100;
+  } else {
+    this.finalPrice = this.price;
+  }
+});
 
 const Product = mongoose.model("Product", productSchema);
 

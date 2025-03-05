@@ -19,10 +19,15 @@ const cartSchema = new mongoose.Schema(
           required: true,
           min: [1, "Quantity must be at least 1."],
         },
-        price: {
+        normalPrice: {
           type: Number,
           required: true,
           min: [0, "Price cannot be negative."],
+        },
+        finalPrice: {
+          type: Number,
+          required: true,
+          min: [0, "finalPrice cannot be negative."],
         },
         name: {
           type: String,
@@ -42,23 +47,51 @@ const cartSchema = new mongoose.Schema(
       type: Number,
       default: 0.15,
     },
-    total: {
+    normalTotal: {
       type: Number,
+      default: 0,
+    },
+    finalTotal: {
+      type: Number,
+      default: 0,
     },
     grandTotal: {
       type: Number,
+      default: 0,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      expires: "1d",
     },
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 cartSchema.pre("save", function (next) {
-  this.total = this.products.reduce(
-    (sum, item) => sum + item.quantity * item.price,
-    0
-  );
+  // * Calculate `normalTotal` for the cart and round to 2 decimals
+  this.normalTotal =
+    Math.round(
+      this.products.reduce(
+        (sum, item) => sum + item.quantity * item.normalPrice,
+        0
+      ) * 100
+    ) / 100;
 
-  this.grandTotal = this.total + this.shipping + this.total * this.vat;
+  // * Calculate `finalTotal` for the cart and round to 2 decimals
+  this.finalTotal =
+    Math.round(
+      this.products.reduce(
+        (sum, item) => sum + item.quantity * item.finalPrice,
+        0
+      ) * 100
+    ) / 100;
+
+  // * Calculate `grandTotal` for the cart and round to 2 decimals
+  this.grandTotal =
+    Math.round(
+      (this.finalTotal + this.shipping + this.finalTotal * this.vat) * 100
+    ) / 100;
 
   next();
 });

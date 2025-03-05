@@ -83,11 +83,16 @@ const orderSchema = new mongoose.Schema(
           required: true,
           min: 1,
         },
-        price: {
+        normalPrice: {
           type: Number,
           required: true,
         },
-        totalPrice: { type: Number },
+        finalPrice: {
+          type: Number,
+          required: true,
+        },
+        totalNormalPrice: { type: Number },
+        totalFinalPrice: { type: Number },
       },
     ],
     shipping: {
@@ -98,15 +103,20 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0.15,
     },
-    total: {
+    normalTotal: {
       type: Number,
       required: true,
-      min: [0, "Total cannot be negative."],
+      min: [0, "Normal Total cannot be negative."],
+    },
+    finalTotal: {
+      type: Number,
+      required: true,
+      min: [0, "Final Total cannot be negative."],
     },
     grandTotal: {
       type: Number,
       required: true,
-      min: [0, "Total cannot be negative."],
+      min: [0, "Grand Total cannot be negative."],
     },
     status: {
       type: String,
@@ -127,16 +137,32 @@ orderSchema.virtual("orderNumber").get(function () {
 
 // * Middleware to calculate prices
 orderSchema.pre("save", function (next) {
-  // * Calculate `totalPrice` for each item
+  // * Calculate `totalNormalPrice` for each item and round to 2 decimals
   this.items.forEach((item) => {
-    item.totalPrice = item.quantity * item.price;
+    item.totalNormalPrice =
+      Math.round(item.quantity * item.normalPrice * 100) / 100;
   });
 
-  // * Calculate `orderTotal` for the entire order
-  this.total = this.items.reduce((total, item) => total + item.totalPrice, 0);
+  // * Calculate `totalFinalPrice` for each item and round to 2 decimals
+  this.items.forEach((item) => {
+    item.totalFinalPrice =
+      Math.round(item.quantity * item.finalPrice * 100) / 100;
+  });
+
+  // * Calculate `order NormalTotal` for the entire order and round to 2 decimals
+  this.normalTotal =
+    Math.round(
+      this.items.reduce((total, item) => total + item.totalNormalPrice, 0) * 100
+    ) / 100;
+
+  // * Calculate `order finalTotal` for the entire order and round to 2 decimals
+  this.finalTotal =
+    Math.round(
+      this.items.reduce((total, item) => total + item.totalFinalPrice, 0) * 100
+    ) / 100;
 
   // * Delivery Date
-  this.deliveryDate = dayjs().add(5, "days");
+  this.deliveryDate = new Date(dayjs().add(5, "days"));
 
   next();
 });

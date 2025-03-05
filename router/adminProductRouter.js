@@ -17,7 +17,7 @@ router
   .get(auth, admin, adminGetAllProduct)
   .post(auth, admin, createProduct);
 router
-  .route("/product-detail/:id")
+  .route("/:id")
   .get(auth, admin, validateObjectId, getProduct)
   .patch(auth, admin, validateObjectId, updateProduct)
   .delete(auth, admin, validateObjectId, deleteProduct);

@@ -7,7 +7,7 @@ export const getCartItems = asyncErrorHandler(async (req, res, next) => {
   const cart = await Cart.findOne({ customer: req.customer._id });
 
   if (!cart) {
-    return next(new CustomError("Cart no found.", 404));
+    return next(new CustomError("Cart not found.", 404));
   }
 
   res.status(200).send({
@@ -40,7 +40,8 @@ export const addItemToCart = asyncErrorHandler(async (req, res, next) => {
         {
           quantity,
           product: productId,
-          price: product.price,
+          normalPrice: product.price,
+          finalPrice: product.finalPrice,
           name: product.others.name,
           image: product.imageSmall,
         },
@@ -60,7 +61,8 @@ export const addItemToCart = asyncErrorHandler(async (req, res, next) => {
       cart.products.push({
         quantity,
         product: productId,
-        price: product.price,
+        normalPrice: product.price,
+        finalPrice: product.finalPrice,
         name: product.others.name,
         image: product.imageSmall,
       });

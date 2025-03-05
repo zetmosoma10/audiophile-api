@@ -1,6 +1,7 @@
 import { Product } from "../models/Product.js";
 import { asyncErrorHandler } from "./../utils/asyncErrorHandler.js";
 import { CustomError } from "./../utils/CustomError.js";
+import _ from "lodash";
 
 export const createProduct = asyncErrorHandler(async (req, res) => {
   const product = await Product.create({
@@ -103,7 +104,7 @@ export const getProduct = asyncErrorHandler(async (req, res, next) => {
 // ? ADMIN
 export const adminGetAllProduct = asyncErrorHandler(async (req, res, next) => {
   const products = await Product.find()
-    .select("name price stock category")
+    .select("name price finalPrice stock category discount _id")
     .populate("category", "name");
 
   res.status(200).send({
@@ -114,71 +115,28 @@ export const adminGetAllProduct = asyncErrorHandler(async (req, res, next) => {
 
 export const updateProduct = asyncErrorHandler(async (req, res, next) => {
   const { id } = req.params;
+  const { price, stock, discount } = req.body;
 
-  const productInDb = await Product.findById(id);
+  const product = await Product.findById(id).populate("category", "name");
 
-  if (!productInDb) {
+  if (!product) {
     return next(new CustomError("Product not found", 404));
   }
 
-  const updatedProduct = await Product.findByIdAndUpdate(
-    id,
-    {
-      $set: {
-        slug: req.body.slug || productInDb.slug,
-        name: req.body.name || productInDb.name,
-        description: req.body.description || productInDb.description,
-        price: req.body.price || productInDb.price,
-        stock: req.body.stock || productInDb.stock,
-        discount: req.body.discount || productInDb.discount,
-        features: req.body.features || productInDb.features,
-        category: req.body.category || productInDb.category,
-        image: {
-          mobile: req.body.image?.mobile || productInDb.image.mobile,
-          tablet: req.body.image?.tablet || productInDb.image.tablet,
-          desktop: req.body.image?.desktop || productInDb.image.desktop,
-        },
-        gallery: {
-          first: {
-            mobile:
-              req.body.gallery.first?.mobile ||
-              productInDb.gallery.first.mobile,
-            tablet:
-              req.body.gallery.first?.tablet ||
-              productInDb.gallery.first.tablet,
-            desktop:
-              req.body.gallery.first?.desktop ||
-              productInDb.gallery.first.desktop,
-          },
-          second: {
-            mobile:
-              req.body.gallery.second?.mobile ||
-              productInDb.gallery.second.mobile,
-            tablet:
-              req.body.gallery.second?.tablet ||
-              productInDb.gallery.second.tablet,
-            desktop:
-              req.body.gallery.second?.desktop ||
-              productInDb.gallery.second.desktop,
-          },
-          third: {
-            mobile:
-              req.body.gallery.third?.mobile ||
-              productInDb.gallery.third.mobile,
-            tablet:
-              req.body.gallery.third?.tablet ||
-              productInDb.gallery.third.tablet,
-            desktop:
-              req.body.gallery.third?.desktop ||
-              productInDb.gallery.third.desktop,
-          },
-        },
-        others: req.body.others || productInDb.others,
-        includes: req.body.includes || productInDb.includes,
-      },
-    },
-    { new: true, runValidators: true }
-  );
+  product.stock = stock;
+  product.price = price;
+  product.discount = discount;
+  await product.save();
+
+  const updatedProduct = _.pick(product, [
+    "name",
+    "price",
+    "finalPrice",
+    "stock",
+    "category",
+    "discount",
+    "_id",
+  ]);
 
   res.status(200).send({
     success: true,

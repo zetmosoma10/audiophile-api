@@ -13,25 +13,6 @@ router.get(
   auth,
   admin,
   asyncErrorHandler(async (req, res) => {
-    // * Fetch total revenue from Paid Orders
-    // const totalRevenue = await Order.aggregate([
-    //   { $match: { status: "paid" } },
-    //   { $group: { _id: null, totalRevenue: { $sum: "$grandTotal" } } },
-    // ]);
-
-    // console.log(totalRevenue);
-
-    // // * Gets total Counts
-    // const totalCustomers = await Customer.countDocuments();
-    // const totalOrders = await Order.countDocuments();
-    // const totalProducts = await Product.countDocuments();
-
-    // // * Get 3 latest Orders
-    // const latestOrders = await Order.find()
-    //   .sort("-createdAt")
-    //   .limit(3)
-    //   .select("name orderNumber grandTotal status createdAt");
-
     const [
       totalRevenueResults,
       totalCustomers,

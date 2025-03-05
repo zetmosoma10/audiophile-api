@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { Cart } from "../models/Cart.js";
 import { Order, validateOrder } from "../models/Order.js";
 import { Product } from "../models/Product.js";
@@ -77,10 +78,13 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     items: cart.products.map((item) => ({
       product: item.product,
       quantity: item.quantity,
-      price: item.price,
-      totalPrice: item.quantity * item.price,
+      normalPrice: item.normalPrice,
+      finalPrice: item.finalPrice,
+      totalNormalPrice: item.quantity * item.normalPrice,
+      totalFinalPrice: item.quantity * item.finalPrice,
     })),
-    total: cart.total,
+    normalTotal: cart.normalTotal,
+    finalTotal: cart.finalTotal,
     grandTotal: cart.grandTotal,
   });
 
@@ -104,15 +108,15 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
   await Cart.findOneAndDelete({ customer: customer._id });
 
   // * Send email to customer
-  try {
-    await sendEmail({
-      clientEmail: order.email,
-      subject: "Order Confirmation",
-      htmlContent: orderCreatedEmail(order),
-    });
-  } catch (error) {
-    console.log("Error sending email: ", error);
-  }
+  // try {
+  //   await sendEmail({
+  //     clientEmail: order.email,
+  //     subject: "Order Confirmation",
+  //     htmlContent: orderCreatedEmail(order),
+  //   });
+  // } catch (error) {
+  //   console.log("Error sending email: ", error);
+  // }
 
   res.status(201).send({
     success: true,
@@ -145,7 +149,7 @@ export const getOrder = asyncErrorHandler(async (req, res, next) => {
   const { id } = req.params;
   const order = await Order.findById(id)
     .populate("customer", "firstName lastName email")
-    .populate("items.product", "name");
+    .populate("items.product", "name imageSmall");
 
   if (!order) {
     return next(new CustomError("Order not found", 404));
@@ -168,7 +172,7 @@ export const adminGetAllOrders = asyncErrorHandler(async (req, res, next) => {
   }
 
   const orders = await Order.find(query)
-    .select("name orderNumber grandTotal status createdAt")
+    .select("name orderNumber grandTotal phone status createdAt")
     .sort("-createdAt");
 
   res.status(200).send({
@@ -181,7 +185,7 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const validStatuses = ["pending", "shipped", "delivered", "cancelled"];
+  const validStatuses = ["pending", "delivered", "shipped", "cancelled"];
 
   if (!validStatuses.includes(status)) {
     return next(new CustomError("Invalid status", 400));
@@ -193,22 +197,38 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError("Order not found", 404));
   }
 
+  if (order.status === "delivered") {
+    return next(
+      new CustomError("Cannot change status of a delivered order", 400)
+    );
+  }
+
   order.status = status;
   await order.save();
 
-  try {
-    await sendEmail({
-      clientEmail: order.email,
-      subject: "Order Status Update",
-      htmlContent: orderStatusUpdatedEmail(order),
-    });
-  } catch (error) {
-    console.log("Error sending email: ", error);
-  }
+  const updatedOrder = _.pick(order, [
+    "name",
+    "orderNumber",
+    "grandTotal",
+    "phone",
+    "status",
+    "createdAt",
+    "_id",
+  ]);
+
+  // try {
+  //   await sendEmail({
+  //     clientEmail: order.email,
+  //     subject: "Order Status Update",
+  //     htmlContent: orderStatusUpdatedEmail(order),
+  //   });
+  // } catch (error) {
+  //   console.log("Error sending email: ", error);
+  // }
 
   res.status(200).send({
     success: true,
-    order,
+    order: updatedOrder,
   });
 });
 

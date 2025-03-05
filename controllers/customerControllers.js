@@ -40,7 +40,9 @@ export const deleteProfileAccount = asyncErrorHandler(
 
 //  ? ADMIN
 export const getAllCustomers = asyncErrorHandler(async (req, res) => {
-  const customers = await Customer.find().select("-password -__v");
+  const customers = await Customer.find()
+    .select("-password -__v")
+    .sort("-createdAt");
 
   res.status(200).send({
     success: true,
