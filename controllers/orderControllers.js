@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import _ from "lodash";
 import { Cart } from "../models/Cart.js";
 import { Order, validateOrder } from "../models/Order.js";
@@ -16,112 +17,99 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     return next(new CustomError(err, 400));
   }
 
-  const {
-    name,
-    email,
-    phone,
-    address,
-    city,
-    postalCode,
-    country,
-    paymentMethod,
-    eMoneyNumber,
-    eMoneyPin,
-  } = req.body;
-
   const cart = await Cart.findOne({ customer: customer._id });
 
   if (!cart || cart.products.length === 0) {
     return next(new CustomError("Cart is empty", 400));
   }
 
-  const trackStock = [];
-
-  const updateStockPromises = cart.products.map(async (item) => {
-    const product = await Product.findById(item.product);
-
-    if (!product) {
-      throw new CustomError("Product not found", 404);
-    }
-
-    if (product.stock < item.quantity) {
-      throw new CustomError(`${product.name} is out of stock`, 400);
-    }
-
-    trackStock.push({
-      productId: product._id,
-      restoreQuantity: product.stock,
-    });
-
-    product.stock -= item.quantity;
-    await product.save();
-  });
+  // * START SESSION
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
-    await Promise.all(updateStockPromises);
-  } catch (err) {
-    return next(err);
-  }
+    // * UPDATE STOCK
+    for (const item of cart.products) {
+      const product = await Product.findById(item.product).session(session);
 
-  const order = await Order.create({
-    customer: customer._id,
-    name,
-    email,
-    phone,
-    address,
-    city,
-    postalCode,
-    country,
-    paymentMethod,
-    eMoneyNumber,
-    eMoneyPin,
-    items: cart.products.map((item) => ({
-      product: item.product,
-      quantity: item.quantity,
-      normalPrice: item.normalPrice,
-      finalPrice: item.finalPrice,
-      totalNormalPrice: item.quantity * item.normalPrice,
-      totalFinalPrice: item.quantity * item.finalPrice,
-    })),
-    normalTotal: cart.normalTotal,
-    finalTotal: cart.finalTotal,
-    grandTotal: cart.grandTotal,
-  });
+      if (!product) {
+        throw new CustomError("Product not found", 404);
+      }
 
-  // * Restore stock if order creation fails
-  if (!order) {
-    try {
-      const restoreStockPromises = trackStock.map(async (item) => {
-        const product = await Product.findById(item.productId);
-        product.stock = item.restoreQuantity;
-        await product.save();
-      });
+      if (product.stock < item.quantity) {
+        if (product.stock > 0) {
+          throw new CustomError(
+            `Only (${product.stock})  ${product.name} left in the stock`,
+            400
+          );
+        } else {
+          throw new CustomError(`${product.name} is out of stock`, 400);
+        }
+      }
 
-      await Promise.all(restoreStockPromises);
-    } catch (error) {
-      console.log("Error restoring stock: ", error);
+      product.stock -= item.quantity;
+      await product.save({ session });
     }
 
-    return next(new CustomError("Failed to create order", 500));
+    // * CREATE ORDER
+    const order = await Order.create(
+      [
+        {
+          customer: customer._id,
+          name: req.body.name,
+          email: req.body.email,
+          phone: req.body.phone,
+          address: req.body.address,
+          city: req.body.city,
+          postalCode: req.body.postalCode,
+          country: req.body.country,
+          paymentMethod: req.body.paymentMethod,
+          eMoneyNumber: req.body.eMoneyNumber,
+          eMoneyPin: req.body.eMoneyPin,
+          items: cart.products.map((item) => ({
+            product: item.product,
+            quantity: item.quantity,
+            normalPrice: item.normalPrice,
+            finalPrice: item.finalPrice,
+            totalNormalPrice: item.quantity * item.normalPrice,
+            totalFinalPrice: item.quantity * item.finalPrice,
+          })),
+          normalTotal: cart.normalTotal,
+          finalTotal: cart.finalTotal,
+          grandTotal: cart.grandTotal,
+        },
+      ],
+      { session }
+    );
+
+    // *DELETE CART
+    await Cart.findOneAndDelete({ customer: customer._id }, { session });
+
+    // * COMMIT TRANSACTION
+    await session.commitTransaction();
+    session.endSession();
+
+    // * Send email to customer
+    // try {
+    //   await sendEmail({
+    //     clientEmail: order.email,
+    //     subject: "Order Confirmation",
+    //     htmlContent: orderCreatedEmail(order),
+    //   });
+    // } catch (error) {
+    //   console.log("Error sending email: ", error);
+    // }
+
+    res.status(201).send({
+      success: true,
+      order: order[0],
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+
+    return next(error);
   }
-
-  await Cart.findOneAndDelete({ customer: customer._id });
-
-  // * Send email to customer
-  // try {
-  //   await sendEmail({
-  //     clientEmail: order.email,
-  //     subject: "Order Confirmation",
-  //     htmlContent: orderCreatedEmail(order),
-  //   });
-  // } catch (error) {
-  //   console.log("Error sending email: ", error);
-  // }
-
-  res.status(201).send({
-    success: true,
-    order,
-  });
 });
 
 export const getAllOrders = asyncErrorHandler(async (req, res) => {
@@ -163,7 +151,7 @@ export const getOrder = asyncErrorHandler(async (req, res, next) => {
 
 // ? ADMIN
 export const adminGetAllOrders = asyncErrorHandler(async (req, res, next) => {
-  const { status } = req.query;
+  const { status, page = 1 } = req.query;
 
   const query = {};
 
@@ -171,12 +159,35 @@ export const adminGetAllOrders = asyncErrorHandler(async (req, res, next) => {
     query.status = status;
   }
 
+  if (isNaN(page) || page <= 0) {
+    return next(new CustomError("Invalid Page number", 400));
+  }
+
+  const limit = 5;
+  const skip = (page - 1) * limit;
+  const orderCount = await Order.countDocuments(query);
+
+  if (req.query.page) {
+    if (skip >= orderCount) {
+      return next(new CustomError("Page not Found", 400));
+    }
+  }
+
+  const currentPage = parseInt(page, 10);
+  const totalPages = Math.ceil(orderCount / limit);
+  const totalOrders = orderCount;
+
   const orders = await Order.find(query)
     .select("name orderNumber grandTotal phone status createdAt")
-    .sort("-createdAt");
+    .sort("-createdAt")
+    .skip(skip)
+    .limit(limit);
 
   res.status(200).send({
     success: true,
+    currentPage,
+    totalPages,
+    totalOrders,
     orders,
   });
 });
