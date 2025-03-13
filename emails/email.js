@@ -11,7 +11,7 @@ export async function sendEmail(options) {
   });
 
   const mailOptions = {
-    from: "audiogurus@support.co.za",
+    from: "audio@support.co.za",
     to: options.clientEmail,
     subject: options.subject,
     html: options.htmlContent,

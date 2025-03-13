@@ -90,15 +90,15 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     session.endSession();
 
     // * Send email to customer
-    // try {
-    //   await sendEmail({
-    //     clientEmail: order.email,
-    //     subject: "Order Confirmation",
-    //     htmlContent: orderCreatedEmail(order),
-    //   });
-    // } catch (error) {
-    //   console.log("Error sending email: ", error);
-    // }
+    try {
+      await sendEmail({
+        clientEmail: order.email,
+        subject: "Order Confirmation",
+        htmlContent: orderCreatedEmail(order),
+      });
+    } catch (error) {
+      console.log("Error sending email: ", error);
+    }
 
     res.status(201).send({
       success: true,
@@ -151,13 +151,8 @@ export const getOrder = asyncErrorHandler(async (req, res, next) => {
 
 // ? ADMIN
 export const adminGetAllOrders = asyncErrorHandler(async (req, res, next) => {
-  const { status, page = 1 } = req.query;
-
-  const query = {};
-
-  if (status) {
-    query.status = status;
-  }
+  const { status } = req.query;
+  let page = parseInt(req.query.page, 10) || 1;
 
   if (isNaN(page) || page <= 0) {
     return next(new CustomError("Invalid Page number", 400));
@@ -165,15 +160,25 @@ export const adminGetAllOrders = asyncErrorHandler(async (req, res, next) => {
 
   const limit = 5;
   const skip = (page - 1) * limit;
+  const query = status ? { status } : {};
+
   const orderCount = await Order.countDocuments(query);
 
-  if (req.query.page) {
-    if (skip >= orderCount) {
-      return next(new CustomError("Page not Found", 400));
-    }
+  if (orderCount === 0) {
+    return res.status(200).send({
+      success: true,
+      currentPage: 1,
+      totalPages: 0,
+      totalOrders: 0,
+      orders: [],
+    });
   }
 
-  const currentPage = parseInt(page, 10);
+  if (skip >= orderCount) {
+    return next(new CustomError("Page not Found", 400));
+  }
+
+  const currentPage = page;
   const totalPages = Math.ceil(orderCount / limit);
   const totalOrders = orderCount;
 
@@ -227,15 +232,15 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
     "_id",
   ]);
 
-  // try {
-  //   await sendEmail({
-  //     clientEmail: order.email,
-  //     subject: "Order Status Update",
-  //     htmlContent: orderStatusUpdatedEmail(order),
-  //   });
-  // } catch (error) {
-  //   console.log("Error sending email: ", error);
-  // }
+  try {
+    await sendEmail({
+      clientEmail: order.email,
+      subject: "Order Status Update",
+      htmlContent: orderStatusUpdatedEmail(order),
+    });
+  } catch (error) {
+    console.log("Error sending email: ", error);
+  }
 
   res.status(200).send({
     success: true,

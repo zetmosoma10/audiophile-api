@@ -16,12 +16,12 @@ export function orderCreatedEmail(order) {
                           order.orderNumber
                         }</strong>.</p>
                         <p>We will notify you once your order is processed and shipped.</p>
-                        <p>Thank you for shopping with us!<br>The Audio Store Team</p>
+                        <p>Thank you for shopping with us!</p>
                     </main>
                     <footer style="padding: 10px; text-align: center; font-size: 12px; color: #999; background-color: #f9f9f9; border-radius: 0 0 8px 8px;">
-                        <p style="margin: 0;">&copy; ${new Date().getFullYear()} Tech Gurus. All rights reserved.</p>
+                        <p style="margin: 0;">&copy; ${new Date().getFullYear()} Audiophile. All rights reserved.</p>
                     </footer>
-                </div>  
+                </div>
             </body>
         </html>`;
 }

@@ -14,10 +14,10 @@ export function successPasswordResetEmail(customer) {
             <p>Hi ${customer.firstName},</p>
             <p>Your password has been successfully reset. You can now log in with your new password.</p>
             <p>If you didn’t perform this action, contact our support team immediately.</p>
-            <p>Thank you,<br>The Tech Gurus Team</p>
+            <p>Thank you,<br>The Audiophile Team</p>
           </div>
           <footer style="padding: 10px; text-align: center; font-size: 12px; color: #999; background-color: #f9f9f9; border-radius: 0 0 8px 8px;">
-            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Tech Gurus. All rights reserved.</p>
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} audiophile. All rights reserved.</p>
           </footer>
         </div>
       </body>
