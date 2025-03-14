@@ -15,6 +15,7 @@ router.get(
   asyncErrorHandler(async (req, res) => {
     const [
       totalRevenueResults,
+      orderStats,
       totalCustomers,
       totalOrders,
       totalProducts,
@@ -23,6 +24,14 @@ router.get(
       Order.aggregate([
         { $match: { status: "delivered" } },
         { $group: { _id: null, totalRevenue: { $sum: "$grandTotal" } } },
+      ]),
+      Order.aggregate([
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+          },
+        },
       ]),
       Customer.countDocuments(),
       Order.countDocuments(),
@@ -35,8 +44,16 @@ router.get(
 
     const totalRevenue = totalRevenueResults[0]?.totalRevenue || 0;
 
+    // * CONVERT ARRAY TO OBJECTS
+    const formattedStats = orderStats.reduce((acc, item) => {
+      acc[item._id] = item.count;
+
+      return acc;
+    }, {});
+
     res.status(200).send({
       success: true,
+      orderStats: formattedStats,
       totalOrders,
       totalCustomers,
       totalProducts,

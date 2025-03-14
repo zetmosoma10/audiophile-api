@@ -52,7 +52,7 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     }
 
     // * CREATE ORDER
-    const order = await Order.create(
+    const [order] = await Order.create(
       [
         {
           customer: customer._id,
@@ -90,19 +90,19 @@ export const createOrder = asyncErrorHandler(async (req, res, next) => {
     session.endSession();
 
     // * Send email to customer
-    try {
-      await sendEmail({
-        clientEmail: order.email,
-        subject: "Order Confirmation",
-        htmlContent: orderCreatedEmail(order),
-      });
-    } catch (error) {
-      console.log("Error sending email: ", error);
-    }
+    // try {
+    //   await sendEmail({
+    //     clientEmail: order.email,
+    //     subject: "Order Confirmation",
+    //     htmlContent: orderCreatedEmail(order),
+    //   });
+    // } catch (error) {
+    //   console.log("Error sending email: ", error);
+    // }
 
     res.status(201).send({
       success: true,
-      order: order[0],
+      order: order,
     });
   } catch (error) {
     await session.abortTransaction();
@@ -232,15 +232,15 @@ export const updateOrderStatus = asyncErrorHandler(async (req, res, next) => {
     "_id",
   ]);
 
-  try {
-    await sendEmail({
-      clientEmail: order.email,
-      subject: "Order Status Update",
-      htmlContent: orderStatusUpdatedEmail(order),
-    });
-  } catch (error) {
-    console.log("Error sending email: ", error);
-  }
+  // try {
+  //   await sendEmail({
+  //     clientEmail: order.email,
+  //     subject: "Order Status Update",
+  //     htmlContent: orderStatusUpdatedEmail(order),
+  //   });
+  // } catch (error) {
+  //   console.log("Error sending email: ", error);
+  // }
 
   res.status(200).send({
     success: true,
