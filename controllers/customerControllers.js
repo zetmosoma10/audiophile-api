@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import { Customer } from "../models/Customer.js";
+import bcrypt from "bcrypt";
+import { Customer, validatePassword } from "../models/Customer.js";
 import { Order } from "../models/Order.js";
 import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
 import { CustomError } from "../utils/customError.js";
@@ -24,25 +25,45 @@ export const getLoggedInCustomer = asyncErrorHandler(async (req, res, next) => {
 export const deleteProfileAccount = asyncErrorHandler(
   async (req, res, next) => {
     const id = req.customer._id;
+    const { password } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-      const customer = await Customer.findByIdAndDelete(id).session(session);
+      const customer = await Customer.findById(id).session(session);
 
       if (!customer) {
         return next(new CustomError("Customer not found", 404));
       }
 
-      await Order.deleteMany(id).session(session);
+      if (customer.isAdmin) {
+        return next(
+          new CustomError("Admin cannot perform this operation.", 400)
+        );
+      }
+
+      const err = validatePassword({ password });
+      if (err) {
+        return next(new CustomError(err, 400));
+      }
+
+      // * COMPARE Passwords
+      const dbPassword = customer.password;
+      const isPasswordMatch = await bcrypt.compare(password, dbPassword);
+      if (!isPasswordMatch) {
+        return next(new CustomError("Invalid password", 400));
+      }
+
+      await Order.deleteMany({ customer: id }).session(session);
+      await Customer.findByIdAndDelete(id).session(session);
 
       await session.commitTransaction();
       session.endSession();
 
       res.status(200).send({
         success: true,
-        customer,
+        message: "Account deleted successfully",
       });
     } catch (error) {
       await session.abortTransaction();

@@ -8,6 +8,6 @@ import auth from "../middlewares/auth.js";
 const router = express.Router();
 
 router.route("/me").get(auth, getLoggedInCustomer);
-router.route("/delete-profile-account").delete(auth, deleteProfileAccount);
+router.route("/delete-profile-account").post(auth, deleteProfileAccount);
 
 export default router;
