@@ -21,7 +21,6 @@ import adminOrderRouter from "./router/adminOrderRouter.js";
 import adminAnalyticRouter from "./router/adminAnalyticsRouter.js";
 import globalErrorMiddleware from "./middlewares/globalErrorMiddleware.js";
 import catchAllRoutes from "./middlewares/catchAllRoutes.js";
-process.env.NODE_ENV = "production";
 
 const app = express();
 
