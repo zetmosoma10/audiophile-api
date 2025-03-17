@@ -3,7 +3,7 @@ import _ from "lodash";
 import { Cart } from "../models/Cart.js";
 import { Order, validateOrder } from "../models/Order.js";
 import { Product } from "../models/Product.js";
-import { CustomError } from "../utils/CustomError.js";
+import { CustomError } from "../utils/CustomError1.js";
 import { asyncErrorHandler } from "./../utils/asyncErrorHandler.js";
 import { sendEmail } from "../emails/email.js";
 import { orderCreatedEmail } from "../emails/orderCreatedEmail.js";

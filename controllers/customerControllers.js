@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import _ from "lodash";
 import { Customer, validatePassword } from "../models/Customer.js";
 import { Order } from "../models/Order.js";
 import { asyncErrorHandler } from "../utils/asyncErrorHandler.js";
-import { CustomError } from "../utils/customError.js";
-import _ from "lodash";
+import { CustomError } from "../utils/CustomError.js";
 
 export const getLoggedInCustomer = asyncErrorHandler(async (req, res, next) => {
   const customer = _.pick(req.customer, [
