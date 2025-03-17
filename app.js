@@ -36,7 +36,7 @@ const limiter = rateLimit({
 
 app.use(cors());
 app.use(limiter);
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet());
 app.use(sanitize());
 app.use(xss());
 app.use((req, res, next) => {
