@@ -34,8 +34,10 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again after an hour",
 });
 
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(limiter);
+app.use(compression());
 app.use(helmet());
 app.use(sanitize());
 app.use(xss());
@@ -44,8 +46,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static(publicPath));
-app.use("/api/auth", rateLimit);
-app.use(compression());
+app.use("/api/auth", limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/health", serverStatusRouter);
