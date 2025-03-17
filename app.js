@@ -4,7 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import xss from "xss-clean";
 import compression from "compression";
-// import rateLimit from "express-rate-limit";
+import rateLimit from "express-rate-limit";
 import sanitize from "express-mongo-sanitize";
 import { fileURLToPath } from "url";
 import authRouter from "./router/authRouter.js";
@@ -29,14 +29,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicPath = path.join(__dirname, "public");
 
-// rateLimit({
-//   windowMs: 15 * 60 * 1000, // * 15 minutes
-//   max: 100, // * limit each IP to 100 requests per windowMs // 100 requests
-//   message: "Too many requests from this IP, please try again after an hour",
-// });
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // * 15 minutes
+  max: 100, // * limit each IP to 100 requests per windowMs // 100 requests
+  message: "Too many requests from this IP, please try again after an hour",
+});
 
 app.use(cors());
-app.use(helmet());
+app.use(limiter);
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(sanitize());
 app.use(xss());
 app.use((req, res, next) => {
@@ -44,7 +45,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static(publicPath));
-// app.use("/api/auth", rateLimit);
+app.use("/api/auth", rateLimit);
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
