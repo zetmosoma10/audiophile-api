@@ -14,7 +14,7 @@ export async function sendEmail(options) {
 
   const mailOptions = {
     from: {
-      name: "Audiophile Team",
+      name: "Audiophile",
       address: process.env.EMAIL_USER,
     },
     to: options.clientEmail,

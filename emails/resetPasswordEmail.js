@@ -17,7 +17,7 @@ export function resetPasswordEmail(customer, resetLink) {
                         <a href="${resetLink}" style="display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 16px;">Reset Password</a>
                     </div>
                         <p>If you didn’t request this, you can safely ignore this email. Your password will remain unchanged.</p>
-                        <p>Thank you,<br>The Tech Gurus Team</p>
+                        <p>Thank you,<br>The Audiophile support Team</p>
                     </div>
                     <div style="padding: 10px; text-align: center; font-size: 12px; color: #999; background-color: #f9f9f9; border-radius: 0 0 8px 8px;">
                         <p style="margin: 0;">&copy; ${new Date().getFullYear()} audiophile. All rights reserved.</p>
